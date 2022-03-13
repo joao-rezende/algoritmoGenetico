@@ -1,10 +1,12 @@
 import random
+import matplotlib.pyplot as plt
+import numpy as np
 
 taxa_crossover = 70
 taxa_mutacao = 1
-qtd_individuos = 30
-qtd_geracoes = 20
-qtd_bits = 10
+qtd_individuos = 4
+qtd_geracoes = 5
+qtd_bits = 5
 qtd_binarios = (2 ** qtd_bits) - 1
 usar_eletismo = True
 
@@ -15,10 +17,10 @@ class Individuo():
         self.aptidao = aptidao
 
     def __str__(self):
-        return "    " + self.binario + " | " + str(self.x) + " | " + str(self.aptidao)
+        return "    " + self.binario + " | " + str(round(self.x, 2)) + " | " + str(round(self.aptidao, 2))
 
     def __repr__(self):
-        return "\n" + "    " + str(self.binario) + " | " + str(self.x) + " | " + str(self.aptidao) + "\n"
+        return "\n" + "    " + str(self.binario) + " | " + str(round(self.x, 2)) + " | " + str(round(self.aptidao, 2)) + "\n"
 
 def bin_formatado(i, tamanho):
     s = bin(i)
@@ -83,25 +85,28 @@ def mutacao(filhos):
                 novoValor += bit
         individuo.binario = novoValor
 
-def selecaoTorneio(populacao):
+def selecao_torneio(populacao):
     primeiroIndividuo = populacao[random.randrange(0, qtd_individuos)]
     segundoIndividuo = populacao[random.randrange(0, qtd_individuos)]
 
     return primeiroIndividuo if primeiroIndividuo.aptidao > segundoIndividuo.aptidao else segundoIndividuo 
 
-def elitismo(populacao, geracao):
+def retorna_melhor(populacao):
     melhor = None
     for individuo in populacao:
         if (melhor == None or melhor.aptidao < individuo.aptidao):
             melhor = individuo
+    
+    return melhor
+
+def elitismo(populacao, geracao):
+    melhor = retorna_melhor(populacao)
 
     indice_pior = None
     for i in range(len(geracao)):
         individuo = geracao[i]
         if (indice_pior == None or geracao[indice_pior].aptidao > individuo.aptidao):
             indice_pior = i
-    
-    print("Pior: " + str(geracao[indice_pior].aptidao))
 
     geracao[indice_pior] = melhor
 
@@ -123,21 +128,25 @@ for individuo in populacao:
 for i in range(qtd_geracoes):
     geracao = []
     while len(geracao) < qtd_individuos:
-        individuo = selecaoTorneio(populacao)
-        individuo_ = selecaoTorneio(populacao)
+        individuo = selecao_torneio(populacao)
+        individuo_ = selecao_torneio(populacao)
         
         geracao += gerar_individuos(individuo, individuo_)
 
-
-    print('\n-- Geração sem elitismo  ' + str(i+1) + ' --' )
-    for individuo in geracao:
-        print(individuo)
-
     if usar_eletismo:
         populacao = elitismo(populacao, geracao)
-
-        print('\n-- Geração com elitismo  ' + str(i+1) + ' --' )
-        for individuo in populacao:
-            print(individuo)
     else:
         populacao = geracao
+
+    print('\n-- Geração  ' + str(i+1) + ' --' )
+    for individuo in populacao:
+        print(individuo)
+
+x = np.linspace(-10, 10, 1000)
+y = x**2 - 3*x + 4  
+plt.plot(x, y, color='red')
+
+melhor = retorna_melhor(populacao)
+plt.title("Valor máximo - f(x) = x² - 3x + 4")
+plt.annotate(u'Valor máximo encontrado f(' + str(round(melhor.x, 2)) + ') = ' + str(round(melhor.aptidao, 2)), xy=(melhor.x, melhor.aptidao), xytext=(melhor.x, melhor.aptidao), arrowprops=dict(facecolor='blue',shrink=0.05)) 
+plt.show()
