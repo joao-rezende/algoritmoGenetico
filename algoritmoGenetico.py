@@ -2,6 +2,11 @@ import random
 
 taxa_crossover = 70
 taxa_mutacao = 1
+qtd_individuos = 30
+qtd_geracoes = 20
+qtd_bits = 10
+qtd_binarios = (2 ** qtd_bits) - 1
+usar_eletismo = True
 
 class Individuo():
     def __init__(self, binario, x, aptidao):
@@ -10,14 +15,10 @@ class Individuo():
         self.aptidao = aptidao
 
     def __str__(self):
-        aptidao_formatada = "      " + str(self.aptidao)
-        x_formatado = "      " + str(self.x)
-        return "    " + self.binario + " | " + x_formatado[-7::] + " | " + aptidao_formatada[-9::]
+        return "    " + self.binario + " | " + str(self.x) + " | " + str(self.aptidao)
 
     def __repr__(self):
-        aptidao_formatada = "      " + str(self.aptidao)
-        x_formatado = "      " + str(self.x)
-        return "\n" + "    " + str(self.binario) + " | " + x_formatado[-7::] + " | " + aptidao_formatada[-7::] + "\n"
+        return "\n" + "    " + str(self.binario) + " | " + str(self.x) + " | " + str(self.aptidao) + "\n"
 
 def bin_formatado(i, tamanho):
     s = bin(i)
@@ -26,7 +27,7 @@ def bin_formatado(i, tamanho):
 def gerar_populacao_inicial(populacao, qtd_individuos):
     pop_inicial = []
     while len(pop_inicial) != qtd_individuos:
-        indice_sorteado = int(random.random() * 21)
+        indice_sorteado = int(random.random() * qtd_binarios)
         individuo = populacao[indice_sorteado]
         pop_inicial.append(Individuo(individuo, binario_decimal(individuo), aptidao(individuo)))
 
@@ -40,18 +41,17 @@ def binario_decimal(binario):
         decimal = decimal + dec * pow(2, i)
         binario = binario//10
         i += 1
-    return round(-10 + 20 * decimal / 31, 4)
+    return -10 + 20 * decimal / (2 ** qtd_bits - 1)
 
 
 def aptidao(n):
     n = binario_decimal(n)
-    return round(n*n - 3*n + 4, 4)
+    return n*n - 3*n + 4
 
 
 def crossover(individuo1, individuo2):
     limite_corte = len(individuo1.binario) - 1
     ponto_corte = int(random.random() * (limite_corte - 1) + 1)
-    # print("Ponto de corte = " + str(ponto_corte))
 
     binario1 = individuo1.binario[0:(len(individuo1.binario) - ponto_corte)] + individuo2.binario[-ponto_corte::]
     binario2 = individuo2.binario[0:(len(individuo2.binario) - ponto_corte)] + individuo1.binario[-ponto_corte::]
@@ -84,29 +84,35 @@ def mutacao(filhos):
         individuo.binario = novoValor
 
 def selecaoTorneio(populacao):
-    primeiroIndividuo = populacao[random.randrange(0,4)]
-    segundoIndividuo = populacao[random.randrange(0,4)]
+    primeiroIndividuo = populacao[random.randrange(0, qtd_individuos)]
+    segundoIndividuo = populacao[random.randrange(0, qtd_individuos)]
 
     return primeiroIndividuo if primeiroIndividuo.aptidao > segundoIndividuo.aptidao else segundoIndividuo 
 
-def elitismo(populacao):
+def elitismo(populacao, geracao):
     melhor = None
     for individuo in populacao:
         if (melhor == None or melhor.aptidao < individuo.aptidao):
             melhor = individuo
+
+    indice_pior = None
+    for i in range(len(geracao)):
+        individuo = geracao[i]
+        if (indice_pior == None or geracao[indice_pior].aptidao > individuo.aptidao):
+            indice_pior = i
     
-    return melhor
-x = []
+    print("Pior: " + str(geracao[indice_pior].aptidao))
 
-for y in range(0, 21):
-    x.append(bin_formatado(y, 5))
+    geracao[indice_pior] = melhor
 
-populacao = gerar_populacao_inicial(x, 30)
+    return geracao
 
-melhor_individuo = None
-segundo_melhor_individuo = None
-melhor = None
-segundo_melhor = None
+#Todos os cromossomos existente para a população
+todos_cromossomos = [] 
+for y in range(0, qtd_binarios):
+    todos_cromossomos.append(bin_formatado(y, qtd_bits))
+
+populacao = gerar_populacao_inicial(todos_cromossomos, qtd_individuos)
 
 print("Indíviduo |       X |   Aptidão ")
 
@@ -114,18 +120,24 @@ print("População inicial")
 for individuo in populacao:
     print(individuo)
 
-for i in range(20):
+for i in range(qtd_geracoes):
     geracao = []
-    while len(geracao) < 29:
+    while len(geracao) < qtd_individuos:
         individuo = selecaoTorneio(populacao)
         individuo_ = selecaoTorneio(populacao)
         
         geracao += gerar_individuos(individuo, individuo_)
-    
-    print('\n-- Geração ' + str(i+1) + ' --' )
+
+
+    print('\n-- Geração sem elitismo  ' + str(i+1) + ' --' )
     for individuo in geracao:
         print(individuo)
 
-    geracao.append(elitismo(populacao))
-    
-    populacao = geracao
+    if usar_eletismo:
+        populacao = elitismo(populacao, geracao)
+
+        print('\n-- Geração com elitismo  ' + str(i+1) + ' --' )
+        for individuo in populacao:
+            print(individuo)
+    else:
+        populacao = geracao
