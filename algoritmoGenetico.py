@@ -12,7 +12,7 @@ class Individuo():
     def __str__(self):
         aptidao_formatada = "      " + str(self.aptidao)
         x_formatado = "      " + str(self.x)
-        return "    " + self.binario + " | " + x_formatado[-7::] + " | " + aptidao_formatada[-7::]
+        return "    " + self.binario + " | " + x_formatado[-7::] + " | " + aptidao_formatada[-9::]
 
     def __repr__(self):
         aptidao_formatada = "      " + str(self.aptidao)
@@ -101,7 +101,7 @@ segundo_melhor_individuo = None
 melhor = None
 segundo_melhor = None
 
-print("Indíviduo |    X    | Aptidão ")
+print("Indíviduo |       X |   Aptidão ")
 
 print("População inicial")
 for individuo in populacao:
@@ -119,12 +119,4 @@ for i in range(20):
     for individuo in geracao:
         print(individuo)
     
-    # elitismo(populacao, geracao)
-
-    # print('\n-- Geração Elitismo' + str(i+1) + ' --' )
-    # for individuo in geracao:
-    #     print(individuo)
-
-    # populacao = geracao
-
-# print(x[20])
+    populacao = geracao
