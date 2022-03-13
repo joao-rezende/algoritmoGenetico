@@ -89,6 +89,13 @@ def selecaoTorneio(populacao):
 
     return primeiroIndividuo if primeiroIndividuo.aptidao > segundoIndividuo.aptidao else segundoIndividuo 
 
+def elitismo(populacao):
+    melhor = None
+    for individuo in populacao:
+        if (melhor == None or melhor.aptidao < individuo.aptidao):
+            melhor = individuo
+    
+    return melhor
 x = []
 
 for y in range(0, 21):
@@ -109,7 +116,7 @@ for individuo in populacao:
 
 for i in range(20):
     geracao = []
-    while len(geracao) < 30:
+    while len(geracao) < 29:
         individuo = selecaoTorneio(populacao)
         individuo_ = selecaoTorneio(populacao)
         
@@ -118,5 +125,7 @@ for i in range(20):
     print('\n-- Geração ' + str(i+1) + ' --' )
     for individuo in geracao:
         print(individuo)
+
+    geracao.append(elitismo(populacao))
     
     populacao = geracao
