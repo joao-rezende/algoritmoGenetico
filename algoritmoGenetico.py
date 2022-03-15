@@ -1,3 +1,11 @@
+'''
+Algoritmo Genético para econtrar valor máximo da função f(x) = x*x - 3x + 4, dentro de determinado limite. [-10, 10]
+Desenvolvido por:
+    João Vitor Soares Rezende
+    Pedro Henrique de Menezes
+
+OBS: Para executar o algoritmo é necessário a instalação das libs importadas
+'''
 import random
 import matplotlib.pyplot as plt
 import numpy as np
