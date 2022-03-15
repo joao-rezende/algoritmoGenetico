@@ -6,7 +6,7 @@ taxa_crossover = 70
 taxa_mutacao = 1
 qtd_individuos = 4
 qtd_geracoes = 5
-qtd_bits = 5
+qtd_bits = 10
 qtd_binarios = (2 ** qtd_bits) - 1
 usar_eletismo = True
 
@@ -26,15 +26,6 @@ def bin_formatado(i, tamanho):
     s = bin(i)
     return s[2:].zfill(tamanho)
 
-def gerar_populacao_inicial(populacao, qtd_individuos):
-    pop_inicial = []
-    while len(pop_inicial) != qtd_individuos:
-        indice_sorteado = int(random.random() * qtd_binarios)
-        individuo = populacao[indice_sorteado]
-        pop_inicial.append(Individuo(individuo, binario_decimal(individuo), aptidao(individuo)))
-
-    return pop_inicial
-
 def binario_decimal(binario):
     decimal, i = 0, 0
     binario = int(binario)
@@ -45,11 +36,24 @@ def binario_decimal(binario):
         i += 1
     return -10 + 20 * decimal / (2 ** qtd_bits - 1)
 
+def gerar_populacao_inicial(populacao, qtd_individuos):
+    pop_inicial = []
+    while len(pop_inicial) != qtd_individuos:
+        indice_sorteado = int(random.random() * qtd_binarios)
+        individuo = populacao[indice_sorteado]
+        pop_inicial.append(Individuo(individuo, binario_decimal(individuo), aptidao(individuo)))
+
+    return pop_inicial
+
+def selecao_torneio(populacao):
+    primeiroIndividuo = populacao[random.randrange(0, qtd_individuos)]
+    segundoIndividuo = populacao[random.randrange(0, qtd_individuos)]
+
+    return primeiroIndividuo if primeiroIndividuo.aptidao > segundoIndividuo.aptidao else segundoIndividuo 
 
 def aptidao(n):
     n = binario_decimal(n)
     return n*n - 3*n + 4
-
 
 def crossover(individuo1, individuo2):
     limite_corte = len(individuo1.binario) - 1
@@ -61,16 +65,6 @@ def crossover(individuo1, individuo2):
     filho2 = Individuo(binario2, binario_decimal(binario2), aptidao(binario2))
 
     return [filho1, filho2]
-
-
-def gerar_individuos(individuo1, individuo2):
-    if(random.random() * 100 < taxa_crossover):
-        filhos = crossover(individuo1, individuo2)
-    else:
-        filhos = [individuo1, individuo2]
-    
-    mutacao(filhos)
-    return filhos
 
 def mutacao(filhos):
     for individuo in filhos:
@@ -85,11 +79,14 @@ def mutacao(filhos):
                 novoValor += bit
         individuo.binario = novoValor
 
-def selecao_torneio(populacao):
-    primeiroIndividuo = populacao[random.randrange(0, qtd_individuos)]
-    segundoIndividuo = populacao[random.randrange(0, qtd_individuos)]
-
-    return primeiroIndividuo if primeiroIndividuo.aptidao > segundoIndividuo.aptidao else segundoIndividuo 
+def gerar_individuos(individuo1, individuo2):
+    if(random.random() * 100 < taxa_crossover):
+        filhos = crossover(individuo1, individuo2)
+    else:
+        filhos = [individuo1, individuo2]
+    
+    mutacao(filhos)
+    return filhos
 
 def retorna_melhor(populacao):
     melhor = None
@@ -117,6 +114,7 @@ todos_cromossomos = []
 for y in range(0, qtd_binarios):
     todos_cromossomos.append(bin_formatado(y, qtd_bits))
 
+#Gera a população inicial a partir de um array com todos os cromossomos possível para aquele indíviduo
 populacao = gerar_populacao_inicial(todos_cromossomos, qtd_individuos)
 
 print("Indíviduo |       X |   Aptidão ")
@@ -125,14 +123,17 @@ print("População inicial")
 for individuo in populacao:
     print(individuo)
 
+#Repetição com a quantidade de gerações que for definido para ser gerado
 for i in range(qtd_geracoes):
     geracao = []
+    #Gerando uma nova geração com a quantidade de indivíduos informada
     while len(geracao) < qtd_individuos:
         individuo = selecao_torneio(populacao)
         individuo_ = selecao_torneio(populacao)
         
         geracao += gerar_individuos(individuo, individuo_)
 
+    #Verificando se será feito o uso do elitismo
     if usar_eletismo:
         populacao = elitismo(populacao, geracao)
     else:
@@ -142,6 +143,7 @@ for i in range(qtd_geracoes):
     for individuo in populacao:
         print(individuo)
 
+#Exibindo o gráfico
 x = np.linspace(-10, 10, 1000)
 y = x**2 - 3*x + 4  
 plt.plot(x, y, color='red')
